@@ -1,13 +1,6 @@
 const express = require("express");
 const { users } = require("../data/user.json");
 const router = express.Router();
-/**
- * Route: /
- * Method: GET
- * Description: Get all users
- * Access: Public
- * Parameters: None
- */
 
 router.get("/", (req, res) => {
   res.status(200).json({
@@ -15,14 +8,6 @@ router.get("/", (req, res) => {
     data: users,
   });
 });
-
-/**
- * Route: /
- * Method: POST
- * Description: create new user
- * Access: Public
- * Parameters: None
- */
 
 router.post("/", (req, res) => {
   const { id, name, surname, email, subscriptionType, subscriptionDate } =
@@ -74,7 +59,7 @@ router.get("/:id", (req, res) => {
 router.delete("/deleteuser/:id", (req, res) => {
   const { id } = req.params;
 
-  const userData = users.filter((each) => each.id === id);
+  const userData = users.find((each) => each.id === id);
   console.log("userdata", userData);
   if (!userData) {
     return res.status(404).json({
@@ -83,13 +68,43 @@ router.delete("/deleteuser/:id", (req, res) => {
     });
   }
   const index = users.indexOf(userData);
+  console.log("index", index);
   let data = users.splice(index, 1);
   console.log("data", data);
 
   return res.status(200).json({
     success: true,
-    message: "Delete User with Thier Id",
-    data: users,
+    message: "Delete User with Their Id",
+    data: data,
+  });
+});
+
+router.put("/edituser/:id", (req, res) => {
+  const { id } = req.params;
+  const { data } = req.body;
+
+  const userData = users.find((each) => each.id === id);
+  // console.log("userdata", userData);
+  if (!userData) {
+    return res.status(404).json({
+      success: false,
+      message: "User Not matched !!",
+    });
+  }
+
+  // console.log("data", data);
+  let upadateData = users.map((each) => {
+    if (each.id === id) {
+      return { ...each, ...data };
+    }
+    return each;
+  });
+
+  // console.log("upadate", upadateData);
+  return res.status(200).json({
+    success: true,
+    message: "modify User With their Id",
+    data: upadateData,
   });
 });
 module.exports = router;
