@@ -4,16 +4,22 @@ const router = express.Router();
 
 router.get("/", (req, res) => {
   res.status(200).json({
+    success: true,
     message: "Get All Users Data !!",
     data: users,
   });
 });
 
 router.post("/", (req, res) => {
-  const { id, name, surname, email, subscriptionType, subscriptionDate } =
-    req.body;
+  const { data } = req.body;
 
-  const userData = users.find((each) => each.id === id);
+  if (!data) {
+    return res.status(404).json({
+      Success: false,
+      Message: "No Data To Add a Book",
+    });
+  }
+  const userData = users.find((each) => each.id === data.id);
 
   if (userData) {
     return res.status(404).json({
@@ -21,16 +27,9 @@ router.post("/", (req, res) => {
       message: "User exits With This Id",
     });
   }
-  const Newdata = {
-    Id: id,
-    Name: name,
-    Surname: surname,
-    Email: email,
-    SubscriptionType: subscriptionType,
-    SubscriptionDate: subscriptionDate,
-  };
-  users.push(Newdata);
 
+  // const Alluser = { ...users, data };
+  users.push(data);
   return res.status(201).json({
     success: true,
     message: "created New User !!",
@@ -105,6 +104,64 @@ router.put("/edituser/:id", (req, res) => {
     success: true,
     message: "modify User With their Id",
     data: upadateData,
+  });
+});
+
+router.get("/subscription_details/:id", (req, res) => {
+  const { id } = req.params;
+  const userData = users.find((each) => each.id === id);
+
+  if (!userData) {
+    return res.status(404).json({
+      success: false,
+      Message: "User Not Exits With Id ",
+    });
+  }
+  const getDays = (data = null) => {
+    const date = data ? new Date(data) : new Date();
+    return Math.floor(date / (1000 * 60 * 60 * 24));
+  };
+
+  const subscriptionType = (date) => {
+    if (userData.subscriptionType === "Basic") {
+      date = date + 90;
+    } else if (userData.subscriptionType === "Standard") {
+      date = date + 180;
+    } else if (userData.subscriptionType === "Premium") {
+      date = date + 365;
+    }
+    return date;
+  };
+
+  let returnDate = getDays(userData.returnDate);
+  let currentDate = getDays();
+  let subscriptionDate = getDays(userData.subscriptionDate);
+  let subscriptionexpiraion = subscriptionType(subscriptionDate);
+
+  console.log("return date", returnDate);
+  console.log("current date", currentDate);
+  console.log("subscription date", subscriptionDate);
+  console.log("subscription expire", subscriptionexpiraion);
+
+  const data = {
+    ...userData,
+    subscriptionExpired: subscriptionexpiraion < currentDate,
+    dayLeftforExpiration:
+      subscriptionexpiraion <= currentDate
+        ? 0
+        : subscriptionexpiraion - currentDate,
+    fine:
+      returnDate < currentDate
+        ? subscriptionexpiraion <= currentDate
+          ? 100
+          : 50
+        : 0,
+  };
+
+  return res.status(200).json({
+    success: true,
+    Message: "subscription detail for user is...",
+    data,
   });
 });
 module.exports = router;

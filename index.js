@@ -14,8 +14,7 @@ app.get("/", (req, res) => {
 });
 
 app.use("/users", require("./routers/user"));
-
-// app.use("/books", require("./routers/book"));
+app.use("/books", require("./routers/book"));
 
 app.get((req, res) => {
   res.status(404).json({
